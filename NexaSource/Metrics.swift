@@ -326,4 +326,29 @@ final class SystemMonitor: ObservableObject {
         timer?.cancel()
         timer = nil
     }
+
+    // Fixed sample readings for documentation screenshots, so they show no real machine.
+    func showDemo() {
+        stop()
+        let now = Date()
+        var demo = Snapshot()
+        demo.cpu = 18; demo.userCPU = 12; demo.systemCPU = 6
+        demo.memoryTotal = 16 * 1_073_741_824
+        demo.memoryUsed = UInt64(9.6 * 1_073_741_824)
+        demo.memoryPressure = 1
+        demo.swapUsed = 0
+        demo.diskTotal = 500_000_000_000
+        demo.diskFree = 312_000_000_000
+        demo.download = 1_840_000
+        demo.upload = 236_000
+        demo.networkName = "Wi-Fi · en0"
+        demo.networkConnected = true
+        demo.sampledAt = now
+        let curve: [Double] = [9, 10, 9, 11, 12, 10, 9, 13, 21, 34, 41, 36, 27, 19, 14, 12, 11, 13, 12, 10,
+                               11, 14, 17, 15, 13, 12, 16, 22, 20, 18]
+        demo.history = curve.enumerated().map { index, value in
+            CPUPoint(time: now.addingTimeInterval(Double(index - curve.count + 1) * 2), value: value)
+        }
+        snapshot = demo
+    }
 }

@@ -163,6 +163,7 @@ final class AppActivityMonitor: ObservableObject {
     private var busy = false
     private var holders: Set<String> = []
     private var suspended = false
+    private var demo = false
 
     var busiest: AppResource? {
         apps.filter { $0.cpu != nil }.max { ($0.cpu ?? 0, $1.app.name) < ($1.cpu ?? 0, $0.app.name) }
@@ -176,7 +177,7 @@ final class AppActivityMonitor: ObservableObject {
     // The panel and the window share one sampler; it only runs while one of them is on screen.
     func hold(_ client: String) {
         holders.insert(client)
-        if !suspended { start() }
+        if !suspended && !demo { start() }
     }
     func drop(_ client: String) {
         holders.remove(client)
@@ -186,8 +187,31 @@ final class AppActivityMonitor: ObservableObject {
     func suspend() { suspended = true; stop() }
     func resume() {
         suspended = false
-        if !holders.isEmpty { start() }
+        if !holders.isEmpty && !demo { start() }
     }
+    // Fixed sample rows of built-in apps for documentation screenshots; nothing is read from the machine.
+    func showDemo() {
+        demo = true
+        stop()
+        let rows: [(String, String, String, Double, Double, Int)] = [
+            ("com.apple.Safari", "Safari 浏览器", "/System/Volumes/Preboot/Cryptexes/App/System/Applications/Safari.app", 6.4, 1.9, 14),
+            ("com.apple.Music", "音乐", "/System/Applications/Music.app", 3.1, 0.42, 3),
+            ("com.apple.mail", "邮件", "/System/Applications/Mail.app", 1.8, 0.61, 5),
+            ("com.apple.Maps", "地图", "/System/Applications/Maps.app", 1.2, 0.38, 4),
+            ("com.apple.Notes", "备忘录", "/System/Applications/Notes.app", 0.6, 0.27, 2),
+            ("com.apple.iCal", "日历", "/System/Applications/Calendar.app", 0.4, 0.19, 2),
+            ("com.apple.finder", "访达", "/System/Library/CoreServices/Finder.app", 0.3, 0.31, 1),
+            ("com.apple.Terminal", "终端", "/System/Applications/Utilities/Terminal.app", 0.1, 0.12, 2)
+        ]
+        apps = rows.enumerated().map { index, row in
+            AppResource(app: AppIdentity(id: row.0, name: row.1, path: row.2), cpu: row.3,
+                        memory: UInt64(row.4 * 1_073_741_824), processCount: row.5, partial: false,
+                        pid: pid_t(400 + index * 37))
+        }
+        foreground = rows[0].0
+        sampledAt = Date()
+    }
+
     private func start() {
         guard timer == nil else { return }
         generation += 1
