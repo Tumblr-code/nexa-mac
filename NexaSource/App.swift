@@ -223,9 +223,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     private func renderPreviews() {
         let folder = CommandLine.arguments.last!
-        monitor.start(interval: 2)
-        activity.hold("panel")
-        let root = NexaPanel(monitor: monitor, preferences: preferences, activity: activity, chip: systemString("machdep.cpu.brand_string"))
+        // NEXA_PREVIEW_DEMO renders fixed sample data instead of this machine's readings.
+        let demo = ProcessInfo.processInfo.environment["NEXA_PREVIEW_DEMO"] != nil
+        if demo {
+            monitor.showDemo()
+            activity.showDemo()
+        } else {
+            monitor.start(interval: 2)
+            activity.hold("panel")
+        }
+        let root = NexaPanel(monitor: monitor, preferences: preferences, activity: activity,
+                             chip: demo ? "Apple M-series" : systemString("machdep.cpu.brand_string"))
         hosting = NSHostingController(rootView: root)
         let window = NSWindow(contentViewController: hosting)
         window.styleMask = [.titled, .closable]

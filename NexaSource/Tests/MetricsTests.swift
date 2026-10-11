@@ -30,7 +30,7 @@ enum MetricsTests {
         check(Units.speed(nil).0 == "—", "Unavailable speed")
         check(Units.speed(.infinity).0 == "—", "Invalid speed")
         check(Units.speed(2_400_000).0 == "2.4" && Units.speed(2_400_000).1 == "MB/s", "Speed units")
-        check(Units.memory(51_539_607_552) == "48.0", "48 GB hardware memory")
+        check(Units.memory(51_539_607_552) == "48.0", "Binary gigabytes for memory")
         check(Units.disk(512_000_000_000) == "512", "Decimal disk units")
 
         let trend = TrendMath.points([(age: 0, value: 50), (age: 30, value: 150), (age: 60, value: -5),

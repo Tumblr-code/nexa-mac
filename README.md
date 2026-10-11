@@ -23,7 +23,15 @@ Mac 菜单栏里的系统状态小工具，界面与 [nexastore.cn](https://nexa
 bash NexaSource/build.sh
 ```
 
-产物（`Nexa.app`、`Nexa-macOS.zip`、`nexa-icon.png`）输出到仓库根目录。应用为本机 ad-hoc 签名，未经 Apple 公证。
+产物（`Nexa.app`、`Nexa-macOS.zip`、`nexa-icon.png`）输出到仓库根目录。应用为 ad-hoc 签名，未经 Apple 公证，第一次打开的方法见[使用说明](docs/使用说明.md#安装)。
+
+不想自己构建的话，可以从 [Releases](https://github.com/Tumblr-code/nexa-mac/releases) 下载打包好的应用。
+
+截图用固定的示例数据生成，不来自任何真实机器：
+
+```bash
+NEXA_PREVIEW_DEMO=1 ./Nexa.app/Contents/MacOS/Nexa --render-previews docs/screenshots
+```
 
 ## 文档
 
