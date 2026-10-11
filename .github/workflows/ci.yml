@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Toolchain
+        run: |
+          sw_vers
+          xcrun swiftc --version
+          uname -m
+
+      - name: Metrics tests
+        run: |
+          xcrun swiftc -swift-version 5 \
+            NexaSource/Metrics.swift NexaSource/Tests/MetricsTests.swift \
+            -o "$RUNNER_TEMP/nexa-metrics-tests"
+          "$RUNNER_TEMP/nexa-metrics-tests"
+
+      - name: Activity tests
+        run: |
+          xcrun swiftc -swift-version 5 \
+            NexaSource/AppActivity.swift NexaSource/Tests/ActivityTests.swift \
+            -o "$RUNNER_TEMP/nexa-activity-tests"
+          "$RUNNER_TEMP/nexa-activity-tests"
+
+      - name: Build the app
+        run: bash NexaSource/build.sh "$RUNNER_TEMP/out"
+
+      - name: Check the bundle
+        run: |
+          APP="$RUNNER_TEMP/out/Nexa.app"
+          codesign --verify --deep --strict "$APP"
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP/Contents/Info.plist")" = "cn.nexastore.nexa"
+          test -f "$APP/Contents/Resources/Nexa.icns"
+          test -f "$APP/Contents/Resources/Manrope-Variable.woff2"
+          "$APP/Contents/MacOS/Nexa" --diagnostics
+
+      - uses: actions/upload-artifact@v5
+        with:
+          name: Nexa-macOS
+          path: ${{ runner.temp }}/out/Nexa-macOS.zip
+          if-no-files-found: error
+          retention-days: 14
